@@ -25,6 +25,20 @@ do_rm() {
     fi
 }
 
+do_update() {
+    file=$1
+    message=$(git log -1 --format="%B" | grep "${file}: ")
+    if [ -z "$message" ]; then
+	    postid=$(get_postid $file)
+	    if [ ! -z "$postid" ]; then
+		cat  $file | ./scripts/rst2html | ./scripts/blogit update $postid
+		message=$(git log -1 --format="%B")
+		newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
+		git commit --no-verify --amend --quiet --message="${newmessage}"
+	    fi
+    fi
+}
+
 process() {
     action=$1
     file=$2
@@ -33,6 +47,8 @@ process() {
 	do_add $file
     elif [ "${action}" == "D" ]; then
 	do_rm $file
+    elif [ "${action}" == "M" ]; then
+	do_update $file
     fi
 }
 
