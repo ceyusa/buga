@@ -12,9 +12,14 @@ do_add() {
     fi
 }
 
+get_postid() {
+    file=$1
+    git log --format="%B" --grep="${file}:" | grep "${file}: " | sed -e "s#${file}: ##" | head -n1
+}
+
 do_rm() {
     file=$1
-    postid=$(git log --format="%B" --grep="${file}:" | grep "${file}: " | sed -e "s#${file}: ##" | head -n1)
+    postid=$(get_postid $file)
     ./scripts/blogit rm $postid
 }
 
