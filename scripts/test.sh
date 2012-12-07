@@ -52,11 +52,9 @@ EOF
 git add $testfile
 git commit -m "update lorem ipsum" || exit -1
 
-
 # remove file
 git rm $testfile
 git commit -m "remove lorem ipsum" || exit -1
-
 
 # rollback
 git reset --hard HEAD~3
