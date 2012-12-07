@@ -18,8 +18,8 @@ def main(args):
     except Exception, e:
         traceback.print_exc()
     else:
-        print doc['title']
-        print doc['body']
+        print doc['title'].encode('utf-8').strip()
+        print doc['body'].encode('utf-8').strip()
 
 if __name__ == '__main__':
 	main(sys.argv)

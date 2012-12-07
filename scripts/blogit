@@ -111,12 +111,11 @@ def get_config ():
     return cfg
 
 def build_content():
-    title = sys.stdin.readline()
-    title = title.strip().encode('utf-8')
+    title = sys.stdin.readline().strip()
 
     body = []
     for line in sys.stdin.readlines():
-        body.append(line.strip().encode('utf-8'))
+        body.append(line.strip())
     description = ' '.join(body)
 
     return { 'title': title,
