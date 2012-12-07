@@ -2,10 +2,14 @@
 
 do_add() {
     file=$1
-    postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit)
-    message=$(git log -1 --format="%B" | grep -v "${file}: ")
-    newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
-    git commit --no-verify --amend --quiet --message="${newmessage}"
+
+    message=$(git log -1 --format="%B" | grep "${file}: ")
+    if [ -z $message ]; then
+	postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit)
+	message=$(git log -1 --format="%B")
+	newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
+	git commit --no-verify --amend --quiet --message="${newmessage}"
+    fi
 }
 
 do_rm() {
