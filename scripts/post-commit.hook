@@ -20,7 +20,9 @@ get_postid() {
 do_rm() {
     file=$1
     postid=$(get_postid $file)
-    ./scripts/blogit rm $postid
+    if [ ! -z "$postid" ]; then
+	./scripts/blogit rm $postid
+    fi
 }
 
 process() {
