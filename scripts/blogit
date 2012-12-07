@@ -87,7 +87,7 @@ class MetaWeblog(Blog):
 
     def edit_post(self, post_id, new_post, publish = True):
 	return self.execute('metaWeblog.editPost', post_id, self.user, self.pwd,
-			    newpost, publish)
+			    new_post, publish)
 
     def delete_post(self, post_id, publish = True):
 	return self.execute('metaWeblog.deletePost', self.key, post_id,
@@ -132,6 +132,10 @@ def do_add(blog):
 def do_rm(blog, post_id):
     return blog.delete_post(post_id)
 
+def do_update(blog, post_id):
+    content = build_content()
+    return blog.edit_post(post_id, content)
+
 def main(args):
     cfg = get_config()
     if cfg is None:
@@ -149,8 +153,10 @@ def main(args):
 
     if command == '' or command == 'add':
         do_add(blog)
-    elif  command == 'rm':
+    elif command == 'rm':
         do_rm(blog, args[1])
+    elif command == 'update':
+        do_update(blog, args[1])
     else:
         print("Option not valid\n")
 
