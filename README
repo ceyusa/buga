@@ -1,0 +1,45 @@
+Another blogging utility
+========================
+
+1. I love git
+2. I love emacs
+3. I enjoy blogging
+4. I like rst
+5. I know python
+6. I hate web editors
+
+This is a set of scripts and git hooks that converto to HTML rst files
+and then publish or delete them as blog posts using the MetaWeblog RPC API.
+
+NOTICE: Right now I file all the blog post under the "General"
+category. If you want to use another category, you should modify the
+scripts/blogit script
+
+WARNING: in order to map the filename <-> postId I decided to rely in the
+git commit message mangling. Be sure of not add a line with the format
+"filename: "
+
+BIOHAZARD: I have only tested it for add an remove blog posts and one
+commit per file, no modifications, neither multiple files per commit
+have been tested.
+
+DEADLY: I have only tested this code in my blog, which uses a custom
+xmlrpc code, so I don't know if all these can work in other kinds of
+blogs.
+
+CONCLUSION: if you are a coward, avoid this.
+
+Configuration
+-------------
+
+Edit your .git/config file and add something like
+
+[blog]
+        uri = http://my.blog/blog/XmlRpc.php
+        username = username
+        password = ubberpassword
+
+And now hook the git post-commit hook:
+
+cd .git/hooks
+ln ln -s ../../scripts/post-commit.hook post-commit
