@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+
+import os
+import xmlrpclib
+import urllib
+from subprocess import Popen, CalledProcessError, PIPE
+import re
+import sys
+import pprint
+
+def checkURL(url):
+    try:
+	urllib.urlopen(url)
+    except IOError:
+	return False
+    return True
+
+class BlogError(Exception):
+    METHOD_NOT_SUPPORTED = 'Method not (yet) supported'
+
+    def __init__(self, msg):
+	self.msg  = msg
+
+    def __repr__(self):
+	return self.msg
+
+    __str__ = __repr__
+
+class Blog:
+    def __init__(self, uri, user, pwd, default_blog_id = None, key = '1'):
+	self.user = user
+	self.pwd = pwd
+	self.key = key
+	if default_blog_id is not None:
+	    self.default_blog_id = default_blog_id
+
+	# Check if URL exists
+	if not checkURL(uri):
+	    raise BlogError('XML-RPC API URL not found.')
+
+	# Connect to the api. Call listMethods to keep a dictionary of
+	# available methods
+	self._server = xmlrpclib.ServerProxy(uri)
+
+        try:
+            self._methods = self._server.system.listMethods()
+        except xmlrpclib.Fault, fault:
+            raise BlogError(fault.faultString)
+
+        self._methods.sort()
+
+    def execute(self, methodname, *args):
+        if not methodname in self._methods:
+            raise BlogError(BlogError.METHOD_NOT_SUPPORTED)
+
+        try:
+            r = getattr(self._server, methodname)(*args)
+        except xmlrpclib.Fault, fault:
+            raise BlogError(fault.faultString)
+
+        return r
+
+class MetaWeblog(Blog):
+    def __init__(self, uri, user, pwd, default_blog_id):
+	Blog.__init__(self, uri, user, pwd, default_blog_id)
+
+    def get_recent_posts(self, numposts = 10, blog_id = None):
+	if blog_id is None:
+	    if self.default_blog_id is None:
+		raise BlogError("No blog_id passed")
+	    blog_id = self.default_blog_id
+
+        return self.execute('metaWeblog.getRecentPosts',
+                            blog_id, self.user, self.pwd, numposts)
+
+    def get_post(self, post_id):
+	return self.execute('metaWeblog.getPost', post_id, self.user, self.pwd)
+
+    def new_post(self, content, publish = False, blog_id = None):
+	if blog_id is None:
+	    if self.default_blog_id is None:
+		raise BlogError("No blog_id passed")
+	    blog_id = self.default_blog_id
+
+        return self.execute('metaWeblog.newPost', blog_id, self.user, self.pwd,
+                            content, publish)
+
+    def edit_post(self, post_id, new_post, publish = True):
+	return self.execute('metaWeblog.editPost', post_id, self.user, self.pwd,
+			    newpost, publish)
+
+    def delete_post(self, post_id, publish = True):
+	return self.execute('metaWeblog.deletePost', self.key, post_id,
+			    self.user, self.pwd, publish)
+
+
+def get_config ():
+    cfg = {}
+    to_run = ['git', 'config', '--get-regex', 'blog']
+    process = Popen(to_run, stdout = PIPE, stderr = None, stdin = None)
+    output, error = process.communicate()
+    if process.returncode != 0:
+        return None;
+
+    for line in output.strip().split("\n"):
+        m = re.match("blog.(\S+)\s+(.*)", line.strip())
+        name = m.group(1)
+        value = m.group(2)
+        cfg[name] = value
+
+    return cfg
+
+def build_content():
+    title = sys.stdin.readline()
+    title = title.strip().encode('utf-8')
+
+    body = []
+    for line in sys.stdin.readlines():
+        body.append(line.strip().encode('utf-8'))
+    description = ' '.join(body)
+
+    return { 'title': title,
+             'description': description,
+             'categories': ['General'] }
+
+def do_add(blog):
+    content = build_content()
+    post_id = blog.new_post(content, True)
+    print "http://www.ceyusa.com/blog/index.php/blog/show/{0}.html".format(post_id)
+
+def do_rm(blog, post_id):
+    return blog.delete_post(post_id)
+
+def main(args):
+    cfg = get_config()
+    if cfg is None:
+        sys.stderr.write('No configuration found\n')
+        exit(-1)
+
+    if len(args) > 1:
+        command = args[1]
+    else:
+        command = ''
+
+    args[1:2] = []
+
+    blog = MetaWeblog(cfg['uri'], cfg['username'], cfg['password'], '1')
+
+    if command == '' or command == 'add':
+        do_add(blog)
+    elif  command == 'rm':
+        do_rm(blog, args[1])
+    else:
+        print("Option not valid\n")
+
+if __name__ == '__main__':
+	main(sys.argv)
