@@ -1,5 +1,7 @@
 #!/bin/sh
 
+git checkout -b test
+
 testfile=$(date +%Y%m%d)
 testfile="${testfile}.rst"
 
@@ -57,4 +59,5 @@ git rm $testfile
 git commit -m "remove lorem ipsum" || exit -1
 
 # rollback
-git reset --hard HEAD~3
+git checkout master
+git branch -D test
