@@ -136,6 +136,11 @@ def do_update(blog, post_id):
     content = build_content()
     return blog.edit_post(post_id, content)
 
+def do_list(blog, count = 1):
+    posts = blog.get_recent_posts(count)
+    for p in posts:
+        print "{0} - {1}".format(p['postid'], p['title'].encode('utf-8'))
+
 def main(args):
     cfg = get_config()
     if cfg is None:
@@ -157,6 +162,8 @@ def main(args):
         do_rm(blog, args[1])
     elif command == 'update':
         do_update(blog, args[1])
+    elif command == 'list':
+        do_list(blog, count=(10 if len(args) == 1 else int(args[1])))
     else:
         print("Option not valid\n")
 
