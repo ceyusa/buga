@@ -126,7 +126,8 @@ def build_content():
 def do_add(blog):
     content = build_content()
     post_id = blog.new_post(content, True)
-    print "http://www.ceyusa.com/blog/index.php/blog/show/{0}.html".format(post_id)
+    #print "http://www.ceyusa.com/blog/index.php/blog/show/{0}.html".format(post_id)
+    print post_id
 
 def do_rm(blog, post_id):
     return blog.delete_post(post_id)
