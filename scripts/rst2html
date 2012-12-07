@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import docutils.core as rst
+import sys
+import traceback
+
+def main(args):
+    overrides = {
+        'embed_stylesheet': False,
+        }
+    doc = ""
+
+    try:
+        doc = rst.publish_parts(source = sys.stdin,
+                                source_class = rst.io.FileInput,
+                                writer_name = 'html',
+                                settings_overrides = overrides)
+    except Exception, e:
+        traceback.print_exc()
+    else:
+        print doc['title']
+        print doc['body']
+
+if __name__ == '__main__':
+	main(sys.argv)
