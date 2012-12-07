@@ -1,0 +1,32 @@
+#!/bin/sh
+
+do_add() {
+    file=$1
+    postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit)
+    message=$(git log -1 --format="%B" | grep -v "${file}: ")
+    newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
+    git commit --no-verify --amend --quiet --message="${newmessage}"
+}
+
+do_rm() {
+    file=$1
+    postid=$(git log --format="%B" --grep="${file}:" | grep "${file}: " | sed -e "s#${file}: ##" | head -n1)
+    ./scripts/blogit rm $postid
+}
+
+process() {
+    action=$1
+    file=$2
+
+    if [ "${action}" == "A" ]; then
+	do_add $file
+    elif [ "${action}" == "D" ]; then
+	do_rm $file
+    fi
+}
+
+git diff --diff-filter=ADM --name-status HEAD^ | grep "\.rst$" | \
+while read line; do
+    p=( $line )
+    process ${p[0]}  ${p[1]}
+done
