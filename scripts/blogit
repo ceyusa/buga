@@ -7,6 +7,7 @@ from subprocess import Popen, CalledProcessError, PIPE
 import re
 import sys
 import pprint
+import argparse
 
 def checkURL(url):
     try:
@@ -61,8 +62,8 @@ class Blog:
         return r
 
 class MetaWeblog(Blog):
-    def __init__(self, uri, user, pwd, default_blog_id):
-	Blog.__init__(self, uri, user, pwd, default_blog_id)
+    def __init__(self, uri, user, pwd, default_blog_id, key):
+	Blog.__init__(self, uri, user, pwd, default_blog_id, key)
 
     def get_recent_posts(self, numposts = 10, blog_id = None):
 	if blog_id is None:
@@ -93,7 +94,6 @@ class MetaWeblog(Blog):
 	return self.execute('metaWeblog.deletePost', self.key, post_id,
 			    self.user, self.pwd, publish)
 
-
 def get_config ():
     cfg = {}
     to_run = ['git', 'config', '--get-regex', 'blog']
@@ -110,7 +110,7 @@ def get_config ():
 
     return cfg
 
-def build_content():
+def build_content(categories):
     title = sys.stdin.readline().strip()
 
     body = []
@@ -118,25 +118,28 @@ def build_content():
         body.append(line.strip())
     description = ' '.join(body)
 
-    return { 'title': title,
-             'description': description,
-             'categories': ['General'] }
+    content = { 'title': title,
+                'description': description }
 
-def do_add(blog):
-    content = build_content()
+    if len(categories) > 0:
+        content['categories'] = categories
+
+    return content
+
+def do_add(blog, args):
+    content = build_content(args.categories)
     post_id = blog.new_post(content, True)
-    #print "http://www.ceyusa.com/blog/index.php/blog/show/{0}.html".format(post_id)
     print post_id
 
-def do_rm(blog, post_id):
-    return blog.delete_post(post_id)
+def do_rm(blog, args):
+    return blog.delete_post(args.id)
 
-def do_update(blog, post_id):
-    content = build_content()
-    return blog.edit_post(post_id, content)
+def do_update(blog, args):
+    content = build_content(args.categories)
+    return blog.edit_post(args.id, content)
 
-def do_list(blog, count = 1):
-    posts = blog.get_recent_posts(count)
+def do_list(blog, args):
+    posts = blog.get_recent_posts(args.count)
     for p in posts:
         print "{0} - {1}".format(p['postid'], p['title'].encode('utf-8'))
 
@@ -153,18 +156,48 @@ def main(args):
 
     args[1:2] = []
 
-    blog = MetaWeblog(cfg['uri'], cfg['username'], cfg['password'], '1')
+    parser = argparse.ArgumentParser()
 
-    if command == '' or command == 'add':
-        do_add(blog)
+    if command == 'add':
+        parser.usage = "blogit add";
     elif command == 'rm':
-        do_rm(blog, args[1])
+        parser.usage = "blogit rm <ID>"
+        parser.add_argument('id', metavar="ID", help='post id')
     elif command == 'update':
-        do_update(blog, args[1])
+        parser.usage = "blogit update <post id>";
+        parser.add_argument('id', metavar="ID", help='post id')
     elif command == 'list':
-        do_list(blog, count=(10 if len(args) == 1 else int(args[1])))
+        parser.usage = "blogit list [-c count]";
+        parser.add_argument('-s', '--count', metavar="N", type=int, default=10,
+                            help='number of posts to list')
     else:
-        print("Option not valid\n")
+        print >>sys.stderr, "Usage: blogit [add|rm|update|list] --help"
+        sys.exit(1)
+
+    parser.add_argument("-c", "--categories", default="General",
+                        help="categories to set in the post")
+    parser.add_argument("-b", "--blogid",  default='1', metavar="ID",
+                        help="set the blog id",)
+    parser.add_argument("-k", "--blogkey", default='1', metavar="KEY",
+                        help="set the blog key")
+
+    args = parser.parse_args()
+    args.categories = args.categories.split(',')
+
+    blog = MetaWeblog(cfg['uri'],
+                      cfg['username'],
+                      cfg['password'],
+                      args.blogid,
+                      args.blogkey)
+
+    if command == 'add':
+        do_add(blog, args)
+    elif command == 'rm':
+        do_rm(blog, args)
+    elif command == 'update':
+        do_update(blog, args)
+    elif command == 'list':
+        do_list(blog, args)
 
 if __name__ == '__main__':
 	main(sys.argv)

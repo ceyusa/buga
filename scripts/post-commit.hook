@@ -5,7 +5,7 @@ do_add() {
 
     message=$(git log -1 --format="%B" | grep "${file}: ")
     if [ -z "$message" ]; then
-	postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit)
+	postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit add)
 	message=$(git log -1 --format="%B")
 	newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
 	git commit --no-verify --amend --quiet --message="${newmessage}"

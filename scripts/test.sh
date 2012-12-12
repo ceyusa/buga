@@ -2,7 +2,7 @@
 
 git checkout -b test
 
-./scripts/blogit list 1
+./scripts/blogit list -s 1
 
 testfile=$(date +%Y%m%d)
 testfile="${testfile}.rst"
@@ -40,7 +40,7 @@ EOF
 git add $testfile
 git commit -m "lorem ipsum" || exit -1
 
-./scripts/blogit list 1
+./scripts/blogit list -s 1
 
 # modify file
 cat <<EOF > $testfile
@@ -58,13 +58,13 @@ EOF
 git add $testfile
 git commit -m "update lorem ipsum" || exit -1
 
-./scripts/blogit list 1
+./scripts/blogit list -s 1
 
 # remove file
 git rm $testfile
 git commit -m "remove lorem ipsum" || exit -1
 
-./scripts/blogit list 1
+./scripts/blogit list -s 1
 
 # rollback
 git checkout master
