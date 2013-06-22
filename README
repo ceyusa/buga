@@ -41,5 +41,5 @@ Edit your .git/config file and add something like
 
 And now hook the git post-commit hook:
 
-cd .git/hooks
-ln ln -s ../../scripts/post-commit.hook post-commit
+$ cd .git/hooks
+$ ln -s ../../scripts/post-commit.hook post-commit
