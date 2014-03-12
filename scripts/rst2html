@@ -1,14 +1,83 @@
 #!/usr/bin/env python
 
 import docutils.core as rst
+from docutils import nodes, utils
+from docutils.parsers.rst import directives, Directive
+
 import sys
 import traceback
+
+class YouTube(Directive):
+    """ Embed YouTube video in posts.
+
+    Based on the YouTube directive by Brian Hsu:
+    https://gist.github.com/1422773
+
+    VIDEO_ID is required, with / height are optional integer,
+    and align could be left / center / right.
+
+    Usage:
+    .. youtube:: VIDEO_ID
+        :width: 640
+        :height: 480
+        :align: center
+    """
+
+    def align(argument):
+        """Conversion function for the "align" option."""
+        return directives.choice(argument, ('left', 'center', 'right'))
+
+    def yesno(argument):
+        return directives.choice(argument, ('yes', 'no'))
+
+    required_arguments = 1
+    optional_arguments = 2
+    option_spec = {
+        'width': directives.positive_int,
+        'height': directives.positive_int,
+        'align': align,
+        'nocookie': yesno,
+    }
+
+    final_argument_whitespace = False
+    has_content = False
+
+    def run(self):
+        videoID = self.arguments[0].strip()
+        width = 420
+        height = 315
+        align = 'left'
+        domain = 'www.youtube.com'
+
+        if 'width' in self.options:
+            width = self.options['width']
+
+        if 'height' in self.options:
+            height = self.options['height']
+
+        if 'align' in self.options:
+            align = self.options['align']
+
+        if 'nocookie' in self.options and self.options['nocookie'] == 'yes':
+            domain = 'www.youtube-nocookie.com'
+
+        url = 'https://{}/embed/{}'.format(domain, videoID)
+        div_block = '<div class="youtube" align="{}">'.format(align)
+        embed_block = '<iframe width="{}" height="{}" src="{}" '\
+                      'frameborder="0"></iframe>'.format(width, height, url)
+
+        return [
+            nodes.raw('', div_block, format='html'),
+            nodes.raw('', embed_block, format='html'),
+            nodes.raw('', '</div>', format='html')]
 
 def main(args):
     overrides = {
         'embed_stylesheet': False,
         }
     doc = ""
+
+    directives.register_directive('youtube', YouTube)
 
     try:
         doc = rst.publish_parts(source = sys.stdin,
