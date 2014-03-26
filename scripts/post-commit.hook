@@ -5,7 +5,7 @@ do_add() {
 
     message=$(git log -1 --format="%B" | grep "${file}: ")
     if [ -z "$message" ]; then
-	postid=$(cat  $file | ./scripts/rst2html | ./scripts/blogit add)
+	postid=$(cat  $file | ./buga/scripts/rst2html | ./buga/scripts/blogit add)
 	message=$(git log -1 --format="%B")
 	newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
 	git commit --no-verify --amend --quiet --message="${newmessage}"
@@ -21,7 +21,7 @@ do_rm() {
     file=$1
     postid=$(get_postid $file)
     if [ ! -z "$postid" ]; then
-	./scripts/blogit rm $postid
+	./buga/scripts/blogit rm $postid
     fi
 }
 
@@ -31,7 +31,7 @@ do_update() {
     if [ -z "$message" ]; then
 	    postid=$(get_postid $file)
 	    if [ ! -z "$postid" ]; then
-		cat  $file | ./scripts/rst2html | ./scripts/blogit update $postid
+		cat  $file | ./buga/scripts/rst2html | ./buga/scripts/blogit update $postid
 		message=$(git log -1 --format="%B")
 		newmessage=$(printf "${message}\n\n${file}: ${postid}\n")
 		git commit --no-verify --amend --quiet --message="${newmessage}"
