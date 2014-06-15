@@ -52,7 +52,7 @@ process() {
     fi
 }
 
-git diff-index --diff-filter=ADM --name-status HEAD^ | grep "\.rst$" | \
+git diff-index --diff-filter=ADM --name-status HEAD^ | grep "\.rst$" | grep -v "pages" | \
 while read line; do
     p=( $line )
     process ${p[0]}  ${p[1]}
